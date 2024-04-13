@@ -5,7 +5,6 @@ from builtins import object
 import numpy as np
 from scripts.classifiers.linear_svm import *
 from scripts.classifiers.softmax import *
-from past.builtins import xrange
 
 
 class LinearClassifier(object):
@@ -57,7 +56,10 @@ class LinearClassifier(object):
             #########################################################################
             # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-            pass
+            sample_index = np.random.choice(num_train, batch_size) # выбираем случайные индексы из обучающей выборки для формирования batch
+            # извлекаем данные и метки для batchа по выбранным случайным индексам
+            X_batch = X[sample_index]
+            y_batch = y[sample_index]
 
             # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
@@ -72,7 +74,7 @@ class LinearClassifier(object):
             #########################################################################
             # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-            pass
+            self.W -= grad * learning_rate # обновляем веса с использованием градиента и коэффициента скорости обучения
 
             # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
@@ -102,7 +104,7 @@ class LinearClassifier(object):
         ###########################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        y_pred = np.argmax(X.dot(self.W), axis=1) # для каждого примера из X вычисляем скалярное произведение с весами self.W, а затем выбираем индекс с максимальным значением как предсказанная метка класса
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         return y_pred

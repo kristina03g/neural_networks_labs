@@ -1,14 +1,15 @@
 from builtins import range
 from builtins import object
 import numpy as np
-from past.builtins import xrange
 
 
 class KNearestNeighbor(object):
     """ a kNN classifier with L2 distance """
 
     def __init__(self):
-        pass
+
+        self.X_train = None
+        self.y_train = None
 
     def train(self, X, y):
         """
@@ -39,6 +40,11 @@ class KNearestNeighbor(object):
         - y: A numpy array of shape (num_test,) containing predicted labels for the
           test data, where y[i] is the predicted label for the test point X[i].
         """
+        # проверяем на существование обучающих данных
+        if self.X_train is None or self.y_train is None:
+            raise Exception("Can't predict without train")
+        
+        # вычисляем расстояния между тестовыми и обучающими данными различными способами в зависимости от количества циклов
         if num_loops == 0:
             dists = self.compute_distances_no_loops(X)
         elif num_loops == 1:
@@ -77,7 +83,7 @@ class KNearestNeighbor(object):
                 #####################################################################
                 # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-                pass
+                dists[i][j] = np.sqrt(np.sum((X[i] - self.X_train[j]) ** 2)) # вычисляем евклидово расстояние между i-й тестовой точкой и j-й обучающей точкой
 
                 # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         return dists
@@ -101,7 +107,7 @@ class KNearestNeighbor(object):
             #######################################################################
             # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-            pass
+            dists[i] = np.sqrt(np.sum((self.X_train - X[i]) ** 2, axis=1)) # вычисляем евклидово расстояние между i-й тестовой точкой и всеми обучающими точками
 
             # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         return dists
@@ -131,7 +137,12 @@ class KNearestNeighbor(object):
         #########################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        # вычисляем квадрат евклидова расстояния между каждой тестовой точкой и каждой обучающей точкой, используя формулу скалярного произведения и двойного сложения
+        s = \
+            np.sum(X ** 2, axis=1).reshape((num_test, 1)) \
+            + np.sum(self.X_train ** 2, axis=1) \
+            - 2 * X.dot(self.X_train.T)
+        dists = np.sqrt(s)
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         return dists
@@ -164,7 +175,7 @@ class KNearestNeighbor(object):
             #########################################################################
             # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-            pass
+            closest_y = self.y_train[dists[i].argsort()[:k]] # получаем метки k ближайших соседей для i-й тестовой точки
 
             # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
             #########################################################################
@@ -176,7 +187,8 @@ class KNearestNeighbor(object):
             #########################################################################
             # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-            pass
+            values, counts = np.unique(closest_y, return_counts=True)  # вычисляем количество встречающихся меток
+            y_pred[i] = values[counts == counts.max()].min() # выбираем метку, которая встречается чаще всего среди k ближайших соседей, и в случае ничьей выбираем метку с наименьшим значением
 
             # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 

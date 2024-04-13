@@ -1,7 +1,6 @@
 from builtins import range
 import numpy as np
 from random import shuffle
-from past.builtins import xrange
 
 def softmax_loss_naive(W, X, y, reg):
     """
@@ -33,7 +32,34 @@ def softmax_loss_naive(W, X, y, reg):
     #############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    # получаем количество классов и размер обучающей выборки
+    num_classes = W.shape[1]
+    num_train = X.shape[0]
+
+    # проходим по всем элементам обучающей выборки
+    for i in range(num_train):
+        scores = X[i].dot(W) # вычисляем оценки для каждого класса
+        correct_class_score = scores[y[i]] # получаем оценку правильного класса
+
+        # вычисляем сумму экспонент для softmax
+        sum_j = 0.0
+        for j in range(num_classes):
+            sum_j += np.exp(scores[j])
+
+        # рассчитываем градиент и потери
+        for j in range(num_classes):
+            dW[:, j] += (np.exp(scores[j]) * X[i]) / sum_j
+            if (j == y[i]):
+                dW[:, y[i]] -= X[i]
+
+        # обновляем потери
+        loss += -correct_class_score + np.log(sum_j)
+
+    # усредняем потери и градиент
+    loss /= num_train
+    loss += 0.5 * reg * np.sum(W * W)
+    dW /= num_train
+    dW += W * reg
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
@@ -58,7 +84,22 @@ def softmax_loss_vectorized(W, X, y, reg):
     #############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    # получаем количество классов и размер обучающей выборки
+    num_classes = W.shape[1]
+    num_train = X.shape[0]
+
+    scores = X.dot(W) # вычисляем оценки для всех обучающих примеров
+    correct_class_scores = scores[range(num_train), y].reshape((num_train, 1)) # выделяем оценки правильных классов
+    sum_j = np.sum(np.exp(scores), axis=1).reshape((num_train, 1)) # вычисляем сумму экспонент для softmax
+
+    loss = np.sum(-1 * correct_class_scores + np.log(sum_j)) / num_train + 0.5 * reg * np.sum(W * W) # вычисляем потери
+
+    # создаем матрицу для правильных классов
+    correct_matrix = np.zeros(scores.shape)
+    correct_matrix[range(num_train), y] = 1
+
+    dW = X.T.dot(np.exp(scores) / sum_j) - X.T.dot(correct_matrix) # вычисляем градиент
+    dW = dW / num_train + W * reg # усредняем градиент и добавляем регуляризацию
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
