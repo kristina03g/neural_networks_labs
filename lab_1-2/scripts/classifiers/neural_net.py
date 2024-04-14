@@ -79,7 +79,9 @@ class TwoLayerNet(object):
         #############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        h = np.maximum(0, np.dot(X, W1) + b1) # получаем forward pass через первый слой с использованием функции активации ReLU
+
+        scores = np.dot(h, W2) + b2 # получаем forward pass через второй слой нейронной сети для получения оценок классов
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
@@ -97,7 +99,14 @@ class TwoLayerNet(object):
         #############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        row_index = list(range(N))
+        
+        scores = np.exp(scores - np.max(scores)) # преобразуем оценки классов в экспоненты с целью нормализации
+        prob_sum = np.sum(scores, axis=1) # суммируем вероятности для каждого элемента
+        
+        loss = -np.log(scores[row_index, y] / prob_sum).sum() / N # вычисляем потери с учетом правильных классов
+        
+        loss += reg * (np.sum(W1 * W1) + np.sum(W2 * W2)) # добавляем регуляризацию к потерям
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
@@ -110,7 +119,22 @@ class TwoLayerNet(object):
         #############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        dscores = scores / prob_sum[:, np.newaxis] # вычисляем градиент потерь по оценкам классов
+        dscores[row_index, y] -= 1 # вычитаем 1 из соответствующих элементов градиента, соответствующих правильным классам
+        dscores /= N # нормализуем градиент по числу обучающих элементов
+        
+        db2 = np.sum(dscores, axis=0) # вычисляем градиент потерь по смещению второго слоя
+        dW2 = np.dot(h.T, dscores) # вычисляем градиент потерь по весам второго слоя
+        dW2 += 2 * reg * W2 # учитываем регуляризацию
+        
+        dX2 = np.dot(dscores, W2.T) # вычисляем градиент потерь по входам второго слоя
+        dout1 = (np.dot(X, W1) + b1 > 0) * dX2 # вычисляем градиент потерь по выходам первого слоя
+        
+        db1 = np.sum(dout1, axis=0) # вычисляем градиент потерь по смещению первого слоя
+        dW1 = np.dot(X.T, dout1) # вычисляем градиент потерь по весам первого слоя
+        dW1 += 2 * reg * W1 # учитываем регуляризацию
+        
+        grads = {'W1': dW1, 'W2': dW2, 'b1': db1, 'b2': db2}
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
@@ -155,7 +179,9 @@ class TwoLayerNet(object):
             #########################################################################
             # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-            pass
+            sample_idx = np.random.choice(num_train, batch_size) # выбираем случайные индексы из обучающей выборки
+            X_batch = X[sample_idx] # получаем порции обучающих данных по случайным индексам
+            y_batch = y[sample_idx] # получаем соответствующие метки классов для порции данных
 
             # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
@@ -171,7 +197,9 @@ class TwoLayerNet(object):
             #########################################################################
             # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-            pass
+            # перебираем все параметры модели
+            for i in self.params.keys():
+              self.params[i] -= learning_rate * grads[i] # обновляем параметры по правилу градиентного спуска
 
             # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
@@ -217,7 +245,8 @@ class TwoLayerNet(object):
         ###########################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        scores = self.loss(X) # получаем оценки для всех классов на основе входных данных
+        y_pred = np.argmax(scores, axis=1) # получаем предсказанные классы как индексы классов с наибольшей оценкой
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
